@@ -15,7 +15,6 @@ LEFT_TOP_CORNER			equ 0c9h
 RIGHT_UP_CORNER			equ 0bbh
 LEFT_DOWN_CORNER 		equ 0c8h
 RIGHT_DOWN_CORNER		equ 0bch
-
 BACK_COLOR				equ 070h
 SHADOW_COLOR			equ 013h
 
@@ -23,14 +22,14 @@ ARGST					equ 80h
 			
 
 Start:	
-	mov si, offset ARGS
-	mov bx, S_ARGS
+	mov si, offset ARRAY
+	mov bx, SizeOfArgs
 
 	call SCANF
-	mov bl, byte ptr[ARGS]
-	mov bh, byte ptr[ARGS + 1]
-	mov dl, byte ptr[ARGS + 2]
-	mov dh, byte ptr[ARGS + 3]
+	mov bl, byte ptr[ARRAY]
+	mov bh, byte ptr[ARRAY + 1]
+	mov dl, byte ptr[ARRAY + 2]
+	mov dh, byte ptr[ARRAY + 3]
 
 
 ;ofset
@@ -108,21 +107,21 @@ sub cl, 2
 	mov ax, 4c00h
 	int 21h
 
-ARGS	DB	4 DUP(?)
-S_ARGS	equ	$ - ARGS
+ARRAY	DB	4 DUP(?)
+SizeOfArgs	equ	$ - ARRAY
 			
 
 ;============================
 ; Inputs:	si - adress array bytes
 ;			bx - arraysize
-; Outputs:	parse string to array
+; Outputs:	parse string to array of args
 ; Destroys: 	ax, bx, cx, dx, di, si
 ;============================
 
 SCANF		PROC
 	mov di, ARGST		 ;arg start
 	
-	xor ch, ch
+	xor cx, cx
 	mov cl, byte ptr[di] ; kol args
 
 	cmp cx, 0h
@@ -140,9 +139,6 @@ SCANF		PROC
 	mov al, ' '
 	repe scasb
 
-	cmp byte ptr[di - 1], ' '
-	je @@end
-
 	xor ax, ax
 	xor dx, dx
 
@@ -156,11 +152,11 @@ SCANF		PROC
 	sub dl, '0' 			; dl = [di] - '0'
 
 	add al, dl
-	adc ah, 0h	; ax += dl
+	adc ah, 0	; ax += dl
 
 ; if last sym...
 
-	cmp cx, 0h
+	cmp cx, 0
 	je @@write_end
 
 	dec cx
@@ -190,10 +186,14 @@ SCANF		PROC
 SCANF		ENDP
 
 ;========================
-;Inputs: 	ah
-;			bh
-;			bl
+;Inputs: 	Argument in the stack: [bp + 6] - first sym,
+;[bp + 8]- second sym
+;[bp+ 10] - third sym
+;			
+;Output: Draw line, and return di
+;Destructs cx, ax
 ;========================
+
 DRAWTABLE	PROC
 
 	push bp
@@ -225,8 +225,6 @@ DRAWTABLE	PROC
 
 ;RIGHT_UP_CORNER	
 
-	;mov ah, BACK_COLOR
-	;mov al, RIGHT_UP_CORNER	
 	mov ax, [bp + 10]
 	mov word ptr es:[di], ax
  
@@ -238,15 +236,11 @@ DRAWTABLE	PROC
 	mov	word ptr es:[di], ax
 
 
-	;xor dh, dh
 	xor cx, cx
 	mov cl, dl
 	add di, 80*2
 	sub di, cx
 	sub di, cx
-
-	
-
 
 	pop bp
 	ret
