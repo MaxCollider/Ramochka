@@ -149,7 +149,7 @@ SCANF		PROC
 	mul dl					;ax *= 10
 
 	mov dl, byte ptr [di - 1]
-	sub dl, '0' 			; dl = [di] - '0'
+	sub dl, '0' 			; string to number
 
 	add al, dl
 	adc ah, 0	; ax += dl
@@ -158,9 +158,8 @@ SCANF		PROC
 
 	cmp cx, 0
 	je @@write_end
-
-	dec cx
-	inc di
+	sub cx, 1
+	add di, 1
 	
 	;if !SPACE - continue
 
